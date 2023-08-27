@@ -1,12 +1,19 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // fromik custom error message
 import StyledErrorMessage from "./StyledErrorMessage";
+import { useState } from "react";
+
 const NoteForm = ({ isCreate }) => {
+  const [redirect, setRedirect] = useState(false);
+
   const initialValues = {
     title: "",
     content: "",
@@ -22,26 +29,52 @@ const NoteForm = ({ isCreate }) => {
       .required("Content is required."),
   });
 
-  // const validate = (values) => {
-  //   const errors = {};
-
-  //   if (values.title.trim().length < 10) {
-  //     errors.title = "Title must have 10 length update.";
-  //   }
-
-  //   if (values.content.trim().length < 10) {
-  //     errors.content = "Content must have 10 length update.";
-  //   }
-
-  //   return errors;
-  // };
-
-  const submitHandler = (values) => {
-    console.log(values);
+  const submitHandler = async (values) => {
+    if (isCreate) {
+      const response = await fetch(`${import.meta.env.VITE_API}/create`, {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+      if (response.status === 201) {
+        setRedirect(true);
+      } else {
+        toast.error("Something went wrong!", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
+    }
   };
+
+  if (redirect) {
+    return <Navigate to={"/"} />;
+  }
 
   return (
     <section>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      {/* Same as */}
+      <ToastContainer />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold mb-5">
           {isCreate ? "Create a new note." : "Edit your note."}
