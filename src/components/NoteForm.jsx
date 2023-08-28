@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
+
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
@@ -9,14 +11,33 @@ import "react-toastify/dist/ReactToastify.css";
 
 // fromik custom error message
 import StyledErrorMessage from "./StyledErrorMessage";
-import { useState } from "react";
 
 const NoteForm = ({ isCreate }) => {
   const [redirect, setRedirect] = useState(false);
+  const [oldNote, setOldNote] = useState({});
+
+  const { id } = useParams();
+
+  const getOldNote = async () => {
+    const response = await fetch(`${import.meta.env.VITE_API}/edit/${id}`);
+    if (response.status === 200) {
+      const note = await response.json();
+      setOldNote(note);
+    } else {
+      setRedirect(true);
+    }
+  };
+
+  useEffect((_) => {
+    if (!isCreate) {
+      getOldNote();
+    }
+  }, []);
 
   const initialValues = {
-    title: "",
-    content: "",
+    title: isCreate ? "" : oldNote.title,
+    content: isCreate ? "" : oldNote.content,
+    note_id: isCreate ? "" : oldNote._id,
   };
 
   const NoteFormSchema = Yup.object({
@@ -30,28 +51,37 @@ const NoteForm = ({ isCreate }) => {
   });
 
   const submitHandler = async (values) => {
+    let API = `${import.meta.env.VITE_API}`;
+    let method;
+
     if (isCreate) {
-      const response = await fetch(`${import.meta.env.VITE_API}/create`, {
-        method: "post",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
+      API = `${import.meta.env.VITE_API}/create`;
+      method = "post";
+    } else {
+      API = `${import.meta.env.VITE_API}/edit`;
+      method = "put";
+    }
+
+    const response = await fetch(API, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+    if (response.status === 201 || response.status === 200) {
+      setRedirect(true);
+    } else {
+      toast.error("Something went wrong!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
       });
-      if (response.status === 201) {
-        setRedirect(true);
-      } else {
-        toast.error("Something went wrong!", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      }
     }
   };
 
@@ -87,6 +117,7 @@ const NoteForm = ({ isCreate }) => {
         initialValues={initialValues}
         validationSchema={NoteFormSchema}
         onSubmit={submitHandler}
+        enableReinitialize={true}
       >
         {({ errors, touched }) => (
           <Form>
@@ -116,11 +147,12 @@ const NoteForm = ({ isCreate }) => {
               />
               <StyledErrorMessage name="content" />
             </div>
+            <Field type="text" name="note_id" id="note_id" hidden />
             <button
               className=" text-white bg-teal-600 py-3 font-medium w-full text-center"
               type="submit"
             >
-              Save
+              {isCreate ? "Share Note" : "Update Note"}
             </button>
           </Form>
         )}

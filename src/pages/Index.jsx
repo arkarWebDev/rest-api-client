@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Note from "../components/Note";
-import Plus from "../components/Plus";
 import { Watch } from "react-loader-spinner";
 
 import { ToastContainer, toast } from "react-toastify";
@@ -36,7 +35,7 @@ const Index = () => {
   };
 
   return (
-    <section className="flex gap-6 px-10 mt-10 flex-wrap">
+    <section className="flex gap-6 px-10 mt-10 flex-wrap mx-auto w-full justify-center">
       {!loading && notes.length > 0 ? (
         <>
           {notes.map((note) => (
@@ -74,7 +73,6 @@ const Index = () => {
         pauseOnHover
         theme="light"
       />
-      <Plus />
     </section>
   );
 };

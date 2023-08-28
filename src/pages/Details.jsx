@@ -50,7 +50,7 @@ const Details = () => {
           </div>
           <div className="border-t-4 border-t-teal-600 shadow-lg p-3 mt-4">
             <h3 className="text-3xl font-medium">{note.title}</h3>
-            <div>
+            <div className=" flex gap-4 my-2">
               <p className=" flex items-center gap-1 font-medium text-sm text-gray-600">
                 <UserIcon className=" w-4 h-4" /> {note.author}
               </p>
