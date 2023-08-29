@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { ArrowLeftIcon, ArrowUpTrayIcon } from "@heroicons/react/24/solid";
 import { Link, Navigate, useParams } from "react-router-dom";
 
 import { Formik, Field, Form } from "formik";
@@ -15,6 +15,8 @@ import StyledErrorMessage from "./StyledErrorMessage";
 const NoteForm = ({ isCreate }) => {
   const [redirect, setRedirect] = useState(false);
   const [oldNote, setOldNote] = useState({});
+  const [previewImg, setPreviewImg] = useState(null);
+  const fileRef = useRef();
 
   const { id } = useParams();
 
@@ -38,7 +40,10 @@ const NoteForm = ({ isCreate }) => {
     title: isCreate ? "" : oldNote.title,
     content: isCreate ? "" : oldNote.content,
     note_id: isCreate ? "" : oldNote._id,
+    cover_image: isCreate ? null : oldNote.cover_image,
   };
+
+  const SUPPORTED_FORMATS = ["image/png", "image/jpg", "image/jpeg"];
 
   const NoteFormSchema = Yup.object({
     title: Yup.string()
@@ -48,7 +53,27 @@ const NoteForm = ({ isCreate }) => {
     content: Yup.string()
       .min(5, "Content is too short!")
       .required("Content is required."),
+    cover_image: Yup.mixed()
+      .nullable()
+      .test(
+        "FILE_FORMAT",
+        "File type is not support.",
+        (value) => !value || SUPPORTED_FORMATS.includes(value.type)
+      ),
   });
+
+  const handleImageChange = (event, setFieldValue) => {
+    const selectedImage = event.target.files[0];
+    if (selectedImage) {
+      setPreviewImg(URL.createObjectURL(selectedImage));
+      setFieldValue("cover_image", selectedImage);
+    }
+  };
+
+  const clearPreviewImg = (setFieldValue) => {
+    setPreviewImg(null);
+    setFieldValue("cover_image", null);
+  };
 
   const submitHandler = async (values) => {
     let API = `${import.meta.env.VITE_API}`;
@@ -62,12 +87,15 @@ const NoteForm = ({ isCreate }) => {
       method = "put";
     }
 
+    const formData = new FormData();
+    formData.append("title", values.title);
+    formData.append("content", values.content);
+    formData.append("cover_image", values.cover_image);
+    formData.append("note_id", values.note_id);
+
     const response = await fetch(API, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values),
+      body: formData,
     });
     if (response.status === 201 || response.status === 200) {
       setRedirect(true);
@@ -119,8 +147,8 @@ const NoteForm = ({ isCreate }) => {
         onSubmit={submitHandler}
         enableReinitialize={true}
       >
-        {({ errors, touched }) => (
-          <Form>
+        {({ errors, touched, values, setFieldValue }) => (
+          <Form encType="multipart/form-data">
             <div className="mb-3">
               <label htmlFor="title" className=" font-medium block">
                 Note title
@@ -133,7 +161,8 @@ const NoteForm = ({ isCreate }) => {
               />
               <StyledErrorMessage name="title" />
             </div>
-            <div className="">
+
+            <div className="mb-3">
               <label htmlFor="content" className=" font-medium block">
                 Note content
               </label>
@@ -147,7 +176,49 @@ const NoteForm = ({ isCreate }) => {
               />
               <StyledErrorMessage name="content" />
             </div>
-            <Field type="text" name="note_id" id="note_id" hidden />
+            <div className="mb-3">
+              <div className=" flex items-center justify-between">
+                <label htmlFor="cover_image" className=" font-medium block">
+                  Cover image
+                  <span className=" text-xs font-medium ">optional</span>
+                </label>
+                {previewImg && (
+                  <p
+                    className="text-base font-medium cursor-pointer text-teal-600"
+                    onClick={(_) => {
+                      clearPreviewImg(setFieldValue);
+                    }}
+                  >
+                    clear
+                  </p>
+                )}
+              </div>
+              <input
+                type="file"
+                name="cover_image"
+                hidden
+                ref={fileRef}
+                onChange={(e) => {
+                  handleImageChange(e, setFieldValue);
+                }}
+              />
+              <div
+                className=" border border-teal-600 flex items-center justify-center text-teal-600 border-dashed h-60 cursor-pointer rounded-lg relative overflow-hidden"
+                onClick={() => {
+                  fileRef.current.click();
+                }}
+              >
+                <ArrowUpTrayIcon width={30} height={30} className="z-20" />
+                {previewImg && (
+                  <img
+                    src={previewImg}
+                    alt={"preview"}
+                    className=" w-full absolute top-0 left-0 h-full object-cover opacity-80 z-10"
+                  />
+                )}
+              </div>
+              <StyledErrorMessage name="cover_image" />
+            </div>
             <button
               className=" text-white bg-teal-600 py-3 font-medium w-full text-center"
               type="submit"
