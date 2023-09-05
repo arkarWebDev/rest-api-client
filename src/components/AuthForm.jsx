@@ -19,10 +19,12 @@ const AuthForm = ({ isLogin }) => {
   };
 
   const AuthFormSchema = Yup.object({
-    username: Yup.string()
-      .min(3, "Username is too short!")
-      .max(10, "Username is too long!")
-      .required("Username is required!"),
+    username: isLogin
+      ? null
+      : Yup.string()
+          .min(3, "Username is too short!")
+          .max(10, "Username is too long!")
+          .required("Username is required!"),
     email: Yup.string()
       .required("Email is required!")
       .email("Please enter an vaild email!"),
@@ -33,38 +35,45 @@ const AuthForm = ({ isLogin }) => {
 
   const submitHandler = async (values) => {
     const { email, password, username } = values;
-    if (isLogin) {
-      // login codes
-    } else {
-      const response = await fetch(`${import.meta.env.VITE_API}/register`, {
-        method: "POST",
-        body: JSON.stringify({ email, password, username }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.status === 201) {
-        setRedirect(true);
-      } else if (response.status === 400) {
-        const data = await response.json();
-        const pickedMessage = data.errorMessages[0].msg;
+    let END_POINT = `${import.meta.env.VITE_API}/register`;
 
-        toast.error(pickedMessage, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      }
+    if (isLogin) {
+      END_POINT = `${import.meta.env.VITE_API}/login`;
+    }
+    const response = await fetch(END_POINT, {
+      method: "POST",
+      body: JSON.stringify({ email, password, username }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const toastFire = (message) => {
+      toast.error(message, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    };
+
+    const responseData = await response.json();
+    if (response.status === 201 || response.status === 200) {
+      setRedirect(true);
+    } else if (response.status === 400) {
+      const pickedMessage = responseData.errorMessages[0].msg;
+      toastFire(pickedMessage);
+    } else if (response.status === 401) {
+      toastFire(responseData.message);
     }
   };
 
   if (redirect) {
-    return <Navigate to={"/"} />;
+    return <Navigate to={isLogin ? "/" : "/login"} />;
   }
 
   return (
