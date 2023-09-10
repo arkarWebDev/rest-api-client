@@ -58,16 +58,18 @@ const Details = () => {
             )}
             <h3 className="text-3xl font-medium">{note.title}</h3>
             <div className=" flex gap-4 my-2">
-              <p className=" flex items-center gap-1 font-medium text-sm text-gray-600">
-                <UserIcon className=" w-4 h-4" /> {note.author}
-              </p>
-              {note.createdAt && (
-                <p className=" flex items-center gap-1 font-medium text-sm text-gray-600">
-                  <CalendarDaysIcon className=" w-4 h-4" />
-                  {formatISO9075(new Date(note.createdAt), {
-                    representation: "date",
-                  })}
-                </p>
+              {note.createdAt && note.author && (
+                <>
+                  <p className=" flex items-center gap-1 font-medium text-sm text-gray-600">
+                    <UserIcon className=" w-4 h-4" /> {note.author.username}
+                  </p>
+                  <p className=" flex items-center gap-1 font-medium text-sm text-gray-600">
+                    <CalendarDaysIcon className=" w-4 h-4" />
+                    {formatISO9075(new Date(note.createdAt), {
+                      representation: "date",
+                    })}
+                  </p>
+                </>
               )}
             </div>
             <p className="text-base mt-2">{note.content}</p>

@@ -6,13 +6,19 @@ import {
 
 import { Link } from "react-router-dom";
 import formatISO9075 from "date-fns/formatISO9075";
+import { useContext } from "react";
+import { UserContext } from "../contexts/UserContext";
 
 const Note = ({ note, getNotes, customAlert }) => {
+  const { token } = useContext(UserContext);
   const { _id, title, content, createdAt } = note;
 
   const deleteNote = async () => {
     const response = await fetch(`${import.meta.env.VITE_API}/delete/${_id}`, {
       method: "delete",
+      headers: {
+        Authorization: `Bearer ${token.token}`,
+      },
     });
     if (response.status === 204) {
       customAlert("Post deleted.");

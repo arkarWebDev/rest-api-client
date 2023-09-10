@@ -99,6 +99,7 @@ const Index = () => {
             wrapperClassName=""
             visible={loading}
           />
+          {!loading && notes.length === 0 && <p>Notes are not shared yet.</p>}
         </div>
       )}
       <ToastContainer
