@@ -11,7 +11,7 @@ import { UserContext } from "../contexts/UserContext";
 
 const Note = ({ note, getNotes, customAlert }) => {
   const { token } = useContext(UserContext);
-  const { _id, title, content, createdAt } = note;
+  const { _id, title, content, createdAt, author } = note;
 
   const deleteNote = async () => {
     const response = await fetch(`${import.meta.env.VITE_API}/delete/${_id}`, {
@@ -35,14 +35,24 @@ const Note = ({ note, getNotes, customAlert }) => {
           {formatISO9075(new Date(createdAt), { representation: "date" })}
         </p>
         <div className="flex items-center justify-end gap-2">
-          <TrashIcon
-            width={20}
-            className=" text-red-600 cursor-pointer"
-            onClick={deleteNote}
-          />
-          <Link to={"/edit/" + _id}>
-            <PencilSquareIcon width={20} className="text-teal-600" />
-          </Link>
+          {token && (
+            <>
+              {note.author.toString() === token.userId ? (
+                <>
+                  <TrashIcon
+                    width={20}
+                    className=" text-red-600 cursor-pointer"
+                    onClick={deleteNote}
+                  />
+                  <Link to={"/edit/" + _id}>
+                    <PencilSquareIcon width={20} className="text-teal-600" />
+                  </Link>
+                </>
+              ) : (
+                <></>
+              )}
+            </>
+          )}
           <Link to={"/notes/" + _id}>
             <EyeIcon width={20} className=" text-gray-500" />
           </Link>
